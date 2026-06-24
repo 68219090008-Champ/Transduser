@@ -1,36 +1,31 @@
 #include <Arduino.h>
 
-const int digitalPin = 3;
-const int analogPin = A0;
+const int sensorPin = 3;       // ขา D0 ของ KY-025 ต่อกับ D3
 const int ledPin = LED_BUILTIN;
 const unsigned long readInterval = 300;
 
 void setup() {
-  pinMode(digitalPin, INPUT);
+  pinMode(sensorPin, INPUT);
   pinMode(ledPin, OUTPUT);
 
   Serial.begin(9600);
-  Serial.println("KY-025 Sensor Test");
-  Serial.println("D0 -> Arduino D3, A0 -> Arduino A0");
-  Serial.println("Move a magnet near the sensor.");
-  Serial.println("--------------------------------");
+  Serial.println("KY-025 Digital Test");
+  Serial.println("DO -> Arduino D3");
+  Serial.println("-------------------");
 }
 
 void loop() {
-  int digitalValue = digitalRead(digitalPin);
-  int analogValue = analogRead(analogPin);
-
-  digitalWrite(ledPin, digitalValue);
+  int sensorState = digitalRead(sensorPin);
 
   Serial.print("Digital = ");
-  Serial.print(digitalValue);
-  Serial.print(" | Analog = ");
-  Serial.print(analogValue);
+  Serial.print(sensorState);
   Serial.print(" | Status = ");
 
-  if (digitalValue == HIGH) {
+  if (sensorState == HIGH) {
+    digitalWrite(ledPin, HIGH);
     Serial.println("Magnet detected");
   } else {
+    digitalWrite(ledPin, LOW);
     Serial.println("No magnet");
   }
 
