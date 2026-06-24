@@ -1,0 +1,129 @@
+# KY-025 Magnetic Reed Switch Sensor Module
+
+## ภาพประกอบ
+
+![KY-025 Magnetic Reed Sensor](https://sensorkit.joy-it.net/files/files/sensors/KY-025/KY-025.png)
+
+> KY-025 เป็นโมดูลตรวจจับสนามแม่เหล็กแบบ Reed Switch เหมาะสำหรับตรวจจับการเปิด/ปิดประตู หน้าต่าง ตำแหน่งชิ้นงาน หรือการมีอยู่ของแม่เหล็กในระยะใกล้
+
+## รายละเอียดทั่วไป
+
+KY-025 เป็น Sensor ตรวจจับแม่เหล็กที่ใช้ Reed Switch อยู่ภายในหลอดแก้ว เมื่อมีแม่เหล็กเข้าใกล้ หน้าสัมผัสภายใน Reed Switch จะปิดวงจร ทำให้โมดูลส่งสัญญาณออกมาได้ทั้งแบบ Digital และ Analog
+
+บนโมดูลมีวงจรเปรียบเทียบสัญญาณ LM393 และตัวปรับค่าแบบหมุน เพื่อกำหนดระดับ Threshold ของสัญญาณ Digital Output รวมถึงมี LED แสดงสถานะไฟเลี้ยงและสถานะการตรวจจับแม่เหล็ก
+
+## คุณสมบัติหลัก
+
+| รายการ | รายละเอียด |
+| --- | --- |
+| ชื่อโมดูล | KY-025 Magnetic Reed Switch Sensor |
+| ประเภท Sensor | Reed Switch ตรวจจับสนามแม่เหล็ก |
+| แรงดันใช้งาน | 3.3V - 5V |
+| เอาต์พุต | Digital Output และ Analog Output |
+| Comparator | LM393 |
+| สถานะ Reed Switch | Normally Open (NO) |
+| ระยะตรวจจับโดยประมาณ | ประมาณ 10-30 mm ขึ้นอยู่กับความแรงของแม่เหล็ก |
+| ขนาดบอร์ดโดยประมาณ | 36 x 15 x 14 mm |
+| การใช้งานร่วมกับ | Arduino, ESP32, Raspberry Pi และไมโครคอนโทรลเลอร์ทั่วไป |
+
+## ส่วนประกอบบนโมดูล
+
+- Reed Switch ภายในหลอดแก้ว ใช้ตรวจจับสนามแม่เหล็ก
+- LM393 Comparator ใช้เปรียบเทียบสัญญาณและสร้างสัญญาณ Digital
+- Potentiometer ใช้ปรับค่า Threshold ของขา Digital Output
+- LED แสดงไฟเลี้ยงของโมดูล
+- LED แสดงสถานะเมื่อ Sensor ตรวจพบแม่เหล็ก
+- Header pin 4 ขา สำหรับต่อกับไมโครคอนโทรลเลอร์
+
+## Pinout
+
+| ขา KY-025 | หน้าที่ | การต่อกับ Arduino UNO |
+| --- | --- | --- |
+| `G` หรือ `GND` | Ground | `GND` |
+| `+` หรือ `VCC` | ไฟเลี้ยงโมดูล | `5V` |
+| `D0` หรือ `DO` | Digital Output | ขา Digital เช่น `D3` |
+| `A0` หรือ `AO` | Analog Output | ขา Analog เช่น `A0` |
+
+![KY-025 Pinout](https://sensorkit.joy-it.net/files/files/sensors/KY-025/KY-025.svg)
+
+## หลักการทำงาน
+
+Reed Switch ประกอบด้วยแผ่นโลหะบาง 2 แผ่นอยู่ในหลอดแก้ว โดยปกติหน้าสัมผัสจะเปิดอยู่ เมื่อมีแม่เหล็กเข้าใกล้ สนามแม่เหล็กจะทำให้หน้าสัมผัสทั้งสองแตะกันและปิดวงจร
+
+สัญญาณจาก Sensor จะถูกส่งไปยังวงจร LM393 เพื่อเปรียบเทียบกับค่า Threshold ที่ตั้งด้วย Potentiometer ถ้าค่าถึงเงื่อนไขที่กำหนด โมดูลจะส่งสัญญาณออกทางขา `D0` และ LED ตรวจจับจะติด
+
+> หมายเหตุ: ขา `A0` ไม่ได้ให้ค่าความแรงสนามแม่เหล็กแบบต่อเนื่องอย่างแท้จริง เพราะ Reed Switch เป็นสวิตช์เชิงกลแบบเปิด/ปิด ค่า Analog จึงมักเปลี่ยนเป็นสองระดับหลัก ๆ มากกว่าจะเป็นค่าระยะทางที่ละเอียด
+
+## การต่อวงจรกับ Arduino UNO
+
+| KY-025 | Arduino UNO |
+| --- | --- |
+| `+` | `5V` |
+| `G` | `GND` |
+| `D0` | `D3` |
+| `A0` | `A0` |
+
+สามารถใช้เฉพาะขา `D0` ได้ ถ้าต้องการอ่านค่าแบบตรวจพบ/ไม่พบแม่เหล็กเท่านั้น ส่วนขา `A0` ใช้เมื่อต้องการดูค่าระดับแรงดันจาก Sensor ผ่าน Serial Monitor หรือ Serial Plotter
+
+## ตัวอย่างโค้ด Arduino
+
+```cpp
+const int digitalPin = 3;
+const int analogPin = A0;
+const int ledPin = 13;
+
+void setup() {
+  pinMode(digitalPin, INPUT);
+  pinMode(ledPin, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int digitalValue = digitalRead(digitalPin);
+  int analogValue = analogRead(analogPin);
+
+  digitalWrite(ledPin, digitalValue);
+
+  Serial.print("Digital: ");
+  Serial.print(digitalValue);
+  Serial.print(" | Analog: ");
+  Serial.println(analogValue);
+
+  delay(200);
+}
+```
+
+## การอ่านค่า
+
+| สถานะ | Digital Output | Analog Output |
+| --- | --- | --- |
+| ไม่มีแม่เหล็กใกล้ Sensor | มักเป็น `LOW` หรือ `HIGH` ตามบอร์ด/การปรับ Threshold | ค่าหนึ่งในช่วง 0-1023 |
+| มีแม่เหล็กใกล้ Sensor | สถานะเปลี่ยนจากเดิม | ค่าเปลี่ยนเป็นอีกระดับหนึ่ง |
+
+ถ้าขา `D0` ไม่เปลี่ยนสถานะ ให้หมุน Potentiometer บนโมดูลช้า ๆ จน LED ตรวจจับติด/ดับเมื่อเอาแม่เหล็กเข้าใกล้และออกห่าง
+
+## การใช้งานที่เหมาะสม
+
+- ตรวจจับการเปิด/ปิดประตูหรือหน้าต่าง
+- ทำระบบแจ้งเตือนด้วยแม่เหล็ก
+- ตรวจจับตำแหน่งของชิ้นส่วนที่เคลื่อนที่
+- ใช้เป็น Limit Switch แบบไม่สัมผัส
+- นับรอบการหมุนโดยติดแม่เหล็กกับชิ้นส่วนที่หมุน
+- ตรวจจับระดับของเหลวร่วมกับลูกลอยแม่เหล็ก
+
+## ข้อควรระวัง
+
+- ตรวจสอบตำแหน่งขา `VCC` และ `GND` ก่อนจ่ายไฟทุกครั้ง
+- ใช้แรงดันตามช่วงที่รองรับ คือ 3.3V - 5V
+- ระยะตรวจจับขึ้นอยู่กับชนิดและความแรงของแม่เหล็ก
+- Reed Switch เป็นชิ้นส่วนเชิงกล จึงอาจมีอาการ bounce ควรหน่วงเวลา หรือตัด debounce ในโปรแกรมเมื่อต้องการความเสถียร
+- Potentiometer ปรับ Threshold ของสัญญาณ Digital ไม่ได้ปรับระยะตรวจจับของ Reed Switch โดยตรง
+
+## สรุป
+
+KY-025 เป็นโมดูล Sensor ตรวจจับแม่เหล็กที่ใช้งานง่าย เหมาะกับ Arduino UNO และงานตรวจจับสถานะเปิด/ปิดแบบไม่สัมผัส จุดเด่นคือมีทั้งขา `D0` สำหรับอ่านค่าแบบ Digital และขา `A0` สำหรับดูค่าแรงดันจาก Sensor แต่การวัดยังเป็นลักษณะเปิด/ปิดเป็นหลัก ไม่ใช่การวัดความแรงสนามแม่เหล็กแบบละเอียดเหมือน Hall Effect Sensor
+
+## แหล่งอ้างอิง
+
+- [ArduinoModules.info - KY-025 Reed Switch Module](https://arduinomodules.info/ky-025-reed-switch-module/)
+- [Joy-IT SensorKit - KY-025 Analog, magnetic reed sensor](https://sensorkit.joy-it.net/en/sensors/ky-025)
