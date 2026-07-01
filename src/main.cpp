@@ -2,35 +2,33 @@
 #include <Wire.h>
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   while (!Serial) {
+    ;
   }
 
   Wire.begin();
-  Serial.println("I2C Scanner");
+  Serial.println("Scanning I2C addresses...");
 }
 
 void loop() {
   byte error;
   byte address;
-  int nDevices = 0;
-
-  Serial.println("Scanning...");
+  int deviceCount = 0;
 
   for (address = 1; address < 127; address++) {
     Wire.beginTransmission(address);
     error = Wire.endTransmission();
 
     if (error == 0) {
-      Serial.print("I2C device found at address 0x");
+      Serial.print("I2C device found at 0x");
       if (address < 16) {
         Serial.print("0");
       }
-      Serial.print(address, HEX);
-      Serial.println(" !");
-      nDevices++;
+      Serial.println(address, HEX);
+      deviceCount++;
     } else if (error == 4) {
-      Serial.print("Unknown error at address 0x");
+      Serial.print("Unknown error at 0x");
       if (address < 16) {
         Serial.print("0");
       }
@@ -38,12 +36,11 @@ void loop() {
     }
   }
 
-  if (nDevices == 0) {
+  if (deviceCount == 0) {
     Serial.println("No I2C devices found");
   } else {
-    Serial.println("Done");
+    Serial.println("Scan complete");
   }
 
   delay(5000);
 }
-
