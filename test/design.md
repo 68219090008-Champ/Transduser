@@ -1,7 +1,7 @@
 # Hardvsre  การเชื่อมต่อ Arduin UNO R3
 
 # KY-025
-    DO ==> D3
+    DO ==> D7
 
 
 
