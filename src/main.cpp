@@ -18,18 +18,44 @@ const unsigned long readInterval = 300;
 
 static LiquidCrystal_I2C lcd(0x27, 16, 2);
 
+// ตรวจว่าอุปกรณ์ I2C ที่กำหนดมีอยู่จริงหรือไม่
+static bool i2cDeviceExists(uint8_t address) {
+  Wire.beginTransmission(address);
+  // 0 = ACK received
+  return (Wire.endTransmission() == 0);
+}
+
 void setup() {
+
   pinMode(sensorPin, INPUT);
   pinMode(ledPin, OUTPUT);
 
   Serial.begin(9600);
   Serial.println("KY-025 Digital Test");
-  Serial.println("DO -> Arduino D3");
+  Serial.println("DO -> Arduino D7");
+
   Serial.println("LCD I2C address -> 0x27");
   Serial.println("-------------------");
 
+  // เริ่ม I2C bus เพื่อเช็คอุปกรณ์
+  Wire.begin();
+
+  // เช็ค LCD ที่ address 0x27 ว่าต่ออยู่หรือไม่
+  const bool lcdFound = i2cDeviceExists(0x27);
+  Serial.print("I2C device @ 0x27 -> ");
+  Serial.println(lcdFound ? "FOUND" : "NOT FOUND");
+
   lcd.init();
   lcd.backlight();
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(lcdFound ? "LCD FOUND" : "LCD NOT FOUND");
+  lcd.setCursor(0, 1);
+  lcd.print("KY-025 ready");
+
+  delay(1000);
+
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("KY-025");
@@ -46,21 +72,20 @@ void loop() {
   const char* msg = hasMagnet ? "Magnet detected" : "No magnet";
 
   // Serial Monitor
-  Serial.print("Digital = ");
+  Serial.print("Digital=");
   Serial.print(sensorState);
-  Serial.print(" | Status = ");
-  Serial.println(msg);
+  Serial.print(" | Magnet=");
+  Serial.println(hasMagnet ? "YES" : "NO");
+
 
   // LCD 16x2
   lcd.setCursor(0, 0);
-  lcd.print("KY-025         "); // clear line remnants
+  lcd.print("I2C 0x27 KY-025");
 
   lcd.setCursor(0, 1);
-  lcd.print(msg);
-  // กันข้อความสั้นกว่าบรรทัดเดิมค้างท้าย
-  if (!hasMagnet) {
-    lcd.print("       ");
-  }
+  lcd.print("Magnet:");
+  lcd.print(hasMagnet ? "YES" : "NO ");
+
 
   delay(readInterval);
 }
