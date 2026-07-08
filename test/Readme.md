@@ -1,3 +1,5 @@
+## นาย ทีรธร กาญจนวิวิญ
+
 # Transduser
 
 โปรเจคนี้เป็นระบบทดสอบการใช้งาน KY-025 Magnetic Reed Switch Sensor ร่วมกับ Arduino UNO และจอ LCD I2C 16x2
