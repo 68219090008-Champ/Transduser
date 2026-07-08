@@ -1,13 +1,6 @@
 # TODO
-
-- [x] อ่าน `test/design.md`, `src/main.cpp`, `platformio.ini`
-- [x] แก้ `src/main.cpp`:
-  - [x] แก้ข้อความใน Serial ให้ตรงว่า DO -> Arduino D7
-  - [x] ปรับ Serial output ให้ชัดขึ้น (Digital state + YES/NO)
-  - [x] เพิ่มการลองเช็ค/สแกน address LCD I2C (0x27) อย่างง่าย แล้วพิมพ์ผลใน Serial
-  - [x] ปรับข้อความบน LCD ให้เต็มและไม่ค้าง
-- [ ] Build/Upload ด้วย PlatformIO
-- [ ] ทดสอบ: เปิด Serial Monitor 9600 และดูว่าค่าตรงกันกับ LCD
-
-
+- [ ] ทำความเข้าใจไฟล์ที่เกี่ยวข้อง (อ่าน `src/main.cpp` แล้ว)
+- [ ] วางแผนการแก้โค้ดเพื่อให้เกิด “ไฟกระพริบ” (Blink) อย่างเดียว
+- [x] หลังแผนอนุมัติ: แก้ `src/main.cpp` ให้กระพริบ LED_BUILTIN
+- [x] อัปโหลด/ทดสอบใน PlatformIO
 
