@@ -3,6 +3,7 @@
 #include <LiquidCrystal_I2C.h>
 
 // Some LiquidCrystal_I2C variants require this include on older Arduino cores.
+// Some Arduino cores may not define LED_BUILTIN
 #ifndef LED_BUILTIN
   #define LED_BUILTIN 13
 #endif
@@ -24,6 +25,8 @@ static bool i2cDeviceExists(uint8_t address) {
   // 0 = ACK received
   return (Wire.endTransmission() == 0);
 }
+const uint8_t ledPin = LED_BUILTIN;
+const unsigned long blinkIntervalMs = 500; // 500ms ON / 500ms OFF
 
 void setup() {
 
@@ -76,6 +79,8 @@ void loop() {
   Serial.print(sensorState);
   Serial.print(" | Magnet=");
   Serial.println(hasMagnet ? "YES" : "NO");
+  digitalWrite(ledPin, HIGH);
+  delay(blinkIntervalMs);
 
 
   // LCD 16x2
@@ -88,5 +93,6 @@ void loop() {
 
 
   delay(readInterval);
+  digitalWrite(ledPin, LOW);
+  delay(blinkIntervalMs);
 }
-
