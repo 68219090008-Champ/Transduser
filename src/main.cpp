@@ -1,87 +1,72 @@
 #include <Arduino.h>
-#include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-// KY-025 magnetic reed switch
-const int KY025_PIN = 7;
-// Buzzer output pin
-const int BUZZER_PIN = 8;
+// Wiring from test/KY-025.md
+constexpr uint8_t KY025_DO_PIN = 7;  // KY-025 DO -> Arduino D7
+constexpr uint8_t BUZZER_PIN = 8;    // Buzzer + -> Arduino D8
+constexpr unsigned long DEBOUNCE_MS = 50;
 
-// I2C LCD address may vary. 0x27 is common for many 16x2 modules.
+// Typical I2C address for a 16x2 LCD.  Change to 0x3F if required.
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-bool doorOpen = false;
-bool previousState = false;
+bool stableDoorOpen = false;
+bool lastRawDoorOpen = false;
+unsigned long lastRawChangeMs = 0;
+
+void showDoorStatus(bool doorOpen) {
+  // The KY-025 document specifies: LOW = magnet near / door closed,
+  // HIGH = magnet away / door open.
+  Serial.println(F("--------------------------------"));
+  Serial.print(F("KY-025 DO (D7): "));
+  Serial.println(doorOpen ? F("HIGH") : F("LOW"));
+  Serial.print(F("Door status: "));
+  Serial.println(doorOpen ? F("OPEN - WARNING") : F("CLOSED - SAFE"));
+  Serial.print(F("Buzzer (D8): "));
+  Serial.println(doorOpen ? F("ON") : F("OFF"));
+
+  digitalWrite(BUZZER_PIN, doorOpen ? HIGH : LOW);
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(doorOpen ? F("Door: OPEN") : F("Door: CLOSED"));
+  lcd.setCursor(0, 1);
+  lcd.print(doorOpen ? F("Buzzer: ON") : F("Buzzer: OFF"));
+}
 
 void setup() {
   Serial.begin(9600);
-  while (!Serial) {
-    ;
-  }
-
-  pinMode(KY025_PIN, INPUT_PULLUP);
+  pinMode(KY025_DO_PIN, INPUT);
   pinMode(BUZZER_PIN, OUTPUT);
   digitalWrite(BUZZER_PIN, LOW);
 
   lcd.init();
   lcd.backlight();
 
-  Serial.println("เริ่มต้นระบบ KY-025 \u2601");
-  Serial.println("อ่านสถานะประตูและแสดงผลทาง Serial Monitor");
+  // Read and report the real initial state, so the Serial Monitor is useful
+  // immediately after reset.
+  stableDoorOpen = (digitalRead(KY025_DO_PIN) == HIGH);
+  lastRawDoorOpen = stableDoorOpen;
+  lastRawChangeMs = millis();
+
   Serial.println();
-
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("KY-025 Door Guard");
-  lcd.setCursor(0, 1);
-  lcd.print("Waiting...");
-  delay(1000);
-}
-
-void updateDisplay(bool openState) {
-  lcd.clear();
-  if (openState) {
-    lcd.setCursor(0, 0);
-    lcd.print("เปิดอยู่");
-    lcd.setCursor(0, 1);
-    lcd.print("(อันตราย)");
-  } else {
-    lcd.setCursor(0, 0);
-    lcd.print("ปิดอยู่");
-    lcd.setCursor(0, 1);
-    lcd.print("(ปลอดภัย)");
-  }
-}
-
-void updateBuzzer(bool openState) {
-  if (openState) {
-    digitalWrite(BUZZER_PIN, HIGH);
-  } else {
-    digitalWrite(BUZZER_PIN, LOW);
-  }
+  Serial.println(F("KY-025 Machine Door Monitor"));
+  Serial.println(F("Serial Monitor speed: 9600 baud"));
+  Serial.println(F("DO LOW = door closed, DO HIGH = door open"));
+  showDoorStatus(stableDoorOpen);
 }
 
 void loop() {
-  int sensorValue = digitalRead(KY025_PIN);
-  doorOpen = (sensorValue == HIGH);
+  const bool rawDoorOpen = (digitalRead(KY025_DO_PIN) == HIGH);
+  const unsigned long now = millis();
 
-  if (doorOpen != previousState) {
-    if (doorOpen) {
-      Serial.println("สถานะ: ประตูเปิดอยู่ (อันตราย)");
-      Serial.println("LCD: เปิดอยู่ (อันตราย)");
-      Serial.println("Buzzer: ON");
-    } else {
-      Serial.println("สถานะ: ประตูปิดอยู่ (ปลอดภัย)");
-      Serial.println("LCD: ปิดอยู่ (ปลอดภัย)");
-      Serial.println("Buzzer: OFF");
-    }
-    Serial.println();
-
-    updateDisplay(doorOpen);
-    updateBuzzer(doorOpen);
-    previousState = doorOpen;
+  if (rawDoorOpen != lastRawDoorOpen) {
+    lastRawDoorOpen = rawDoorOpen;
+    lastRawChangeMs = now;
   }
 
-  delay(200);
+  // Reed switches can briefly bounce when the magnet moves.
+  if (rawDoorOpen != stableDoorOpen && now - lastRawChangeMs >= DEBOUNCE_MS) {
+    stableDoorOpen = rawDoorOpen;
+    showDoorStatus(stableDoorOpen);
+  }
 }
-
