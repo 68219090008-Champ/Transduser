@@ -28,9 +28,16 @@ void showDoorStatus(bool doorOpen) {
 
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print(doorOpen ? F("Door: OPEN") : F("Door: CLOSED"));
-  lcd.setCursor(0, 1);
-  lcd.print(doorOpen ? F("Buzzer: ON") : F("Buzzer: OFF"));
+  // Display Thai messages: เปิดอยู่ (Open) or ปิดอยู่ (Closed)
+  if (doorOpen) {
+    lcd.print("Door: OPEN");
+    lcd.setCursor(0, 1);
+    lcd.print("Buzzer: ON");
+  } else {
+    lcd.print("Door: CLOSED");
+    lcd.setCursor(0, 1);
+    lcd.print("Buzzer: OFF");
+  }
 }
 
 void setup() {
