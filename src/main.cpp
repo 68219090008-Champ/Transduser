@@ -1,12 +1,13 @@
 #include <Arduino.h>
+#include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-// Wiring from test/KY-025.md
+// กำหนดพิน
 constexpr uint8_t KY025_DO_PIN = 7;  // KY-025 DO -> Arduino D7
-constexpr uint8_t BUZZER_PIN = 8;    // Buzzer + -> Arduino D8
+constexpr uint8_t BUZZER_PIN   = 5;  // Buzzer + -> Arduino D5
 constexpr unsigned long DEBOUNCE_MS = 50;
 
-// Typical I2C address for a 16x2 LCD.  Change to 0x3F if required.
+// ที่อยู่ I2C ของ LCD (เปลี่ยนเป็น 0x3F ถ้าไม่ขึ้น)
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 bool stableDoorOpen = false;
@@ -14,29 +15,26 @@ bool lastRawDoorOpen = false;
 unsigned long lastRawChangeMs = 0;
 
 void showDoorStatus(bool doorOpen) {
-  // The KY-025 document specifies: LOW = magnet near / door closed,
-  // HIGH = magnet away / door open.
   Serial.println(F("--------------------------------"));
   Serial.print(F("KY-025 DO (D7): "));
   Serial.println(doorOpen ? F("HIGH") : F("LOW"));
   Serial.print(F("Door status: "));
   Serial.println(doorOpen ? F("OPEN - WARNING") : F("CLOSED - SAFE"));
-  Serial.print(F("Buzzer (D8): "));
+  Serial.print(F("Buzzer (D5): "));
   Serial.println(doorOpen ? F("ON") : F("OFF"));
 
   digitalWrite(BUZZER_PIN, doorOpen ? HIGH : LOW);
 
-  lcd.clear();
+  // อัปเดตข้อความบน LCD โดยไม่เคลียร์ทั้งจอ (ลดการกะพริบ)
   lcd.setCursor(0, 0);
-  // Display Thai messages: เปิดอยู่ (Open) or ปิดอยู่ (Closed)
   if (doorOpen) {
-    lcd.print("Door: OPEN");
+    lcd.print("เปิดอยู่ (อันตราย) ");   // เติมช่องว่างลบข้อความเก่า
     lcd.setCursor(0, 1);
-    lcd.print("Buzzer: ON");
+    lcd.print("Buzzer: ON        ");
   } else {
-    lcd.print("Door: CLOSED");
+    lcd.print("ปิดอยู่ (ปลอดภัย) ");
     lcd.setCursor(0, 1);
-    lcd.print("Buzzer: OFF");
+    lcd.print("Buzzer: OFF       ");
   }
 }
 
@@ -49,8 +47,7 @@ void setup() {
   lcd.init();
   lcd.backlight();
 
-  // Read and report the real initial state, so the Serial Monitor is useful
-  // immediately after reset.
+  // อ่านสถานะเริ่มต้น
   stableDoorOpen = (digitalRead(KY025_DO_PIN) == HIGH);
   lastRawDoorOpen = stableDoorOpen;
   lastRawChangeMs = millis();
@@ -71,7 +68,7 @@ void loop() {
     lastRawChangeMs = now;
   }
 
-  // Reed switches can briefly bounce when the magnet moves.
+  // debounce
   if (rawDoorOpen != stableDoorOpen && now - lastRawChangeMs >= DEBOUNCE_MS) {
     stableDoorOpen = rawDoorOpen;
     showDoorStatus(stableDoorOpen);
